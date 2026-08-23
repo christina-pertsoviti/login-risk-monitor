@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users | Login Risk Monitor</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<main class="dashboard-container">
+
+    <header class="dashboard-header page-header-with-actions">
+        <div>
+            <h1>User Management</h1>
+            <p>Create staff accounts and review their assigned roles.</p>
+        </div>
+
+        <div class="dashboard-actions">
+            <a th:href="@{/dashboard}" class="btn btn-secondary">
+                Back to Dashboard
+            </a>
+            <a th:href="@{/admin/users/new}" class="btn btn-primary">
+                Create User
+            </a>
+        </div>
+    </header>
+
+    <div th:if="${successMessage}"
+         class="alert alert-success"
+         th:text="${successMessage}">
+    </div>
+
+    <div class="table-container">
+        <table class="users-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Role</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:if="${#lists.isEmpty(users)}">
+                <td colspan="3" class="empty-message">
+                    No users were found.
+                </td>
+            </tr>
+
+            <tr th:each="user : ${users}">
+                <td th:text="${user.id}"></td>
+                <td th:text="${user.username}"></td>
+                <td>
+                    <span class="role-badge"
+                          th:classappend="${user.role == 'ADMIN'} ? ' role-admin' : ' role-user'"
+                          th:text="${user.role}">
+                    </span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+</body>
+</html>

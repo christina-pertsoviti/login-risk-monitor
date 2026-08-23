@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login Attempts | Login Risk Monitor</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<main class="dashboard-container">
+
+    <header class="dashboard-header">
+
+        <h1>Login Attempts</h1>
+
+        <p>
+            Review successful and failed authentication attempts.
+        </p>
+
+        <div class="dashboard-actions">
+
+            <a th:href="@{/dashboard}" class="btn btn-secondary">
+                Back to Dashboard
+            </a>
+
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-danger">
+                    Logout
+                </button>
+            </form>
+
+        </div>
+
+    </header>
+
+    <form th:action="@{/login-attempts}"
+          method="get"
+          class="search-form">
+
+        <input type="text"
+               name="username"
+               th:value="${username}"
+               placeholder="Search by username">
+
+        <button type="submit" class="btn btn-primary">
+            Search
+        </button>
+
+        <a th:href="@{/login-attempts}"
+           class="btn btn-secondary">
+            Clear
+        </a>
+
+    </form>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>Risk Level</th>
+                <th>Attempted At</th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <tr th:if="${#lists.isEmpty(attempts)}">
+                <td colspan="5" class="empty-message">
+                    No login attempts were found.
+                </td>
+            </tr>
+
+            <tr th:each="attempt : ${attempts}">
+
+                <td th:text="${attempt.username}"></td>
+
+                <td th:text="${attempt.ipAddress}"></td>
+
+                <td>
+                    <span
+                            th:class="${attempt.successful}
+                                ? 'status-badge status-success'
+                                : 'status-badge status-failed'"
+                            th:text="${attempt.successful}
+                                ? 'SUCCESS'
+                                : 'FAILED'">
+                    </span>
+                </td>
+
+                <td
+                        th:classappend="${attempt.riskLevel == 'LOW'}
+                            ? 'risk-low'
+                            : (${attempt.riskLevel == 'MEDIUM'}
+                                ? 'risk-medium'
+                                : 'risk-high')"
+                        th:text="${attempt.riskLevel}">
+                </td>
+
+                <td th:text="${#temporals.format(
+                        attempt.attemptedAt,
+                        'dd/MM/yyyy HH:mm'
+                    )}">
+                </td>
+
+            </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</main>
+
+</body>
+</html>

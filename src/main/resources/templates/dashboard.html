@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Login Risk Monitor</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<main class="dashboard-container">
+
+    <header class="dashboard-header">
+
+        <h1>Login Risk Monitor</h1>
+
+        <p>
+            Welcome,
+            <strong sec:authentication="name">User</strong>.
+        </p>
+
+    </header>
+
+    <section class="dashboard-card">
+
+        <h2>Security Dashboard</h2>
+
+        <p class="dashboard-description">
+            Monitor authentication activity and review potentially risky
+            login attempts.
+        </p>
+
+        <div class="stats-grid">
+
+            <div class="stat-card">
+
+                <span class="stat-label">
+                    Total Attempts
+                </span>
+
+                <strong class="stat-number"
+                        th:text="${stats.totalAttempts}">
+                    0
+                </strong>
+
+            </div>
+
+            <div class="stat-card stat-success">
+
+                <span class="stat-label">
+                    Successful
+                </span>
+
+                <strong class="stat-number"
+                        th:text="${stats.successfulAttempts}">
+                    0
+                </strong>
+
+            </div>
+
+            <div class="stat-card stat-failed">
+
+                <span class="stat-label">
+                    Failed
+                </span>
+
+                <strong class="stat-number"
+                        th:text="${stats.failedAttempts}">
+                    0
+                </strong>
+
+            </div>
+
+            <div class="stat-card stat-high-risk">
+
+                <span class="stat-label">
+                    High Risk
+                </span>
+
+                <strong class="stat-number"
+                        th:text="${stats.highRiskAttempts}">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+        <div class="dashboard-actions">
+
+            <a th:href="@{/my-login-history}"
+               class="btn btn-primary">
+                My Login History
+            </a>
+
+            <a sec:authorize="hasRole('ADMIN')"
+               th:href="@{/login-attempts}"
+               class="btn btn-secondary">
+                View All Login Attempts
+            </a>
+
+            <a sec:authorize="hasRole('ADMIN')"
+               th:href="@{/admin/users}"
+               class="btn btn-secondary">
+                Manage Users
+            </a>
+
+            <form th:action="@{/logout}"
+                  method="post">
+
+                <button type="submit"
+                        class="btn btn-secondary">
+                    Logout
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>
