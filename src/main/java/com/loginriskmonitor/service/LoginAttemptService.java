@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -50,7 +50,7 @@ public class LoginAttemptService implements ILoginAttemptService {
                 normalizedIpAddress,
                 successful,
                 riskLevel,
-                LocalDateTime.now()
+                Instant.now()
         );
 
         loginAttemptRepository.save(loginAttempt);
@@ -152,6 +152,7 @@ public class LoginAttemptService implements ILoginAttemptService {
         }
 
         String normalizedValue = value.strip();
+
         return normalizedValue.length() <= maxLength
                 ? normalizedValue
                 : normalizedValue.substring(0, maxLength);

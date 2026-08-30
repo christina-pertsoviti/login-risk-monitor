@@ -1,12 +1,12 @@
 package com.loginriskmonitor.dto;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 public record LoginAttemptReadOnlyDTO(
         String username,
         String ipAddress,
         boolean successful,
         String riskLevel,
-        LocalDateTime attemptedAt
+        ZonedDateTime attemptedAt
 ) {
 }

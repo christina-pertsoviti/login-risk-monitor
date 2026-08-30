@@ -12,7 +12,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "login_attempts")
@@ -39,13 +39,13 @@ public class LoginAttempt {
     private RiskLevel riskLevel;
 
     @Column(name = "attempted_at", nullable = false)
-    private LocalDateTime attemptedAt;
+    private Instant attemptedAt;
 
     public LoginAttempt(String username,
                         String ipAddress,
                         boolean successful,
                         RiskLevel riskLevel,
-                        LocalDateTime attemptedAt) {
+                        Instant attemptedAt) {
         this.username = username;
         this.ipAddress = ipAddress;
         this.successful = successful;
