@@ -4,6 +4,12 @@ Security-focused web application that records authentication attempts, assigns a
 
 Developed as a final project for Coding Factory 9 at the Athens University of Economics and Business (AUEB).
 
+## Live Demo
+
+Application: https://login-risk-monitor.onrender.com
+
+> Note: The live demo uses free-tier hosting. The first request after a period of inactivity may take up to a minute while the service starts.
+
 ## Features
 
 - Records successful and failed login attempts.
@@ -96,7 +102,7 @@ erDiagram
         VARCHAR ip_address
         BOOLEAN successful
         VARCHAR risk_level
-        DATETIME attempted_at
+        TIMESTAMP attempted_at
     }
 ```
 
@@ -192,7 +198,7 @@ docker compose down -v
 | ADMIN | `admin` | `Admin123!` |
 | USER | `user` | `User123!` |
 
-These accounts are intended for local demonstration.
+These accounts are intended for local demonstration only and should be changed or removed in a real production environment.
 
 Administrators can also create new `ADMIN` or `USER` accounts through the application. New passwords are stored using BCrypt.
 
