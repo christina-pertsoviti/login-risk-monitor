@@ -1,6 +1,6 @@
 # Login Risk Monitor
 
-Security-focused web application that records authentication attempts, assigns a risk level and provides role-based login monitoring.
+A security-focused server-side rendered (SSR) Spring Boot application that records authentication attempts, assigns risk levels and provides role-based login monitoring.
 
 Developed as a final project for Coding Factory 9 at the Athens University of Economics and Business (AUEB).
 
@@ -10,43 +10,71 @@ Application: https://login-risk-monitor.onrender.com
 
 > Note: The live demo uses free-tier hosting. The first request after a period of inactivity may take up to a minute while the service starts.
 
+## Stack
+
+- Language: Java 21
+- Frameworks / Libraries:
+    - Spring Boot 3
+    - Spring Security
+    - Spring Data JPA / Hibernate
+    - Thymeleaf
+    - Bean Validation
+    - Flyway
+    - Lombok
+- Database: MySQL 8
+- Testing:
+    - JUnit 5
+    - Mockito
+    - H2
+- Build Tool: Maven
+- Deployment:
+    - Docker
+    - Docker Compose
+
 ## Features
 
 - Records successful and failed login attempts.
-- Stores username, IP address and timestamp.
-- Classifies attempts as `LOW`, `MEDIUM` or `HIGH` risk.
+- Stores submitted username, IP address and timestamp.
+- Classifies login attempts as `LOW`, `MEDIUM` or `HIGH` risk.
 - Provides overall login statistics for administrators.
-- Provides personal login history and statistics for regular users.
-- Supports `ADMIN` and `USER` authorization.
+- Provides personal login statistics and history for regular users.
+- Supports `ADMIN` and `USER` role-based authorization.
 - Allows administrators to view users and create new accounts.
 - Stores passwords using BCrypt.
-- Uses Flyway for database migrations.
-- Includes unit and application-context tests.
+- Uses Flyway for versioned database migrations.
+- Uses DTOs and mappers between the domain and view layers.
 
-## Technology Stack
+## Entry Point
 
-- Java 21
-- Spring Boot 3
-- Spring Security
-- Spring Data JPA / Hibernate
-- Thymeleaf
-- MySQL 8
-- Flyway
-- Maven
-- JUnit 5
-- Mockito
-- H2
-- Docker
-- Docker Compose
+Main class:
+
+```text
+com.loginriskmonitor.LoginRiskMonitorApplication
+```
+
+The default Spring profile is:
+
+```text
+dev
+```
 
 ## Architecture
 
-The application uses server-side rendering with Thymeleaf and a layered architecture:
+The application uses server-side rendering with Thymeleaf and follows a layered architecture:
 
 ```text
-Controller -> Service -> Repository -> MySQL
-                 |
-                 -> DTO / Mapper
+Controller
+    |
+    v
+Service
+    |
+    v
+Repository
+    |
+    v
+MySQL
+
+Service -> DTO / Mapper -> View
 ```
 
 Main package structure:
@@ -63,9 +91,9 @@ src/main/java/com/loginriskmonitor
 └── service
 ```
 
-Spring MVC handles the page flow, Thymeleaf renders the frontend and Spring Security handles authentication and authorization.
+Spring MVC handles page flow, Thymeleaf renders the frontend and Spring Security handles authentication and authorization.
 
-## Domain and Risk Logic
+## Domain Model
 
 The main domain objects are:
 
@@ -74,41 +102,37 @@ The main domain objects are:
 - `LoginAttempt`
 - `RiskLevel`
 
-A user belongs to either the `ADMIN` or `USER` role.
+Database relationships and login-attempt data:
 
-Each login attempt stores the submitted username, IP address, result, risk level and timestamp.
+```text
+ROLE
+├── id (PK)
+└── name
 
-### Domain Model
+USER
+├── id (PK)
+├── username
+├── password
+└── role_id (FK -> ROLE.id)
 
-```mermaid
-erDiagram
-    ROLE ||--o{ USER : has
+LOGIN_ATTEMPT
+├── id (PK)
+├── username
+├── ip_address
+├── successful
+├── risk_level
+└── attempted_at (TIMESTAMP)
 
-    ROLE {
-        BIGINT id PK
-        VARCHAR name
-    }
-
-    USER {
-        BIGINT id PK
-        VARCHAR username
-        VARCHAR password
-        BIGINT role_id FK
-    }
-
-    LOGIN_ATTEMPT {
-        BIGINT id PK
-        VARCHAR username
-        VARCHAR ip_address
-        BOOLEAN successful
-        VARCHAR risk_level
-        TIMESTAMP attempted_at
-    }
+ROLE 1 -------- * USER
 ```
 
-`LoginAttempt` stores the submitted username instead of requiring a direct relationship with `User`. This allows failed login attempts to be recorded even when the submitted username does not exist.
+`LoginAttempt` stores the submitted username instead of requiring a direct relationship with `User`.
 
-### Risk Levels
+This allows failed login attempts to be recorded even when the submitted username does not exist.
+
+## Risk Logic
+
+Login attempts are classified as follows:
 
 ```text
 Successful login              -> LOW
@@ -118,6 +142,74 @@ Third and later failed login  -> HIGH
 
 Failed attempts are calculated using the stored login history for the submitted username.
 
+## Timestamp Handling
+
+Login attempt timestamps are stored using `Instant` and persisted in MySQL using `TIMESTAMP`.
+
+The application stores the actual point in time independently of the server timezone and converts timestamps to:
+
+```text
+Europe/Athens
+```
+
+when preparing login-attempt data for display.
+
+## Configuration and Profiles
+
+The application uses Spring profiles for different environments.
+
+Available profiles:
+
+- `dev` — local development
+- `prod` — production deployment
+- `test` — automated tests
+
+### Development
+
+The development profile connects to:
+
+```text
+localhost:3306/login_risk_monitor
+```
+
+Required environment variable:
+
+```text
+DB_PASSWORD
+```
+
+Optional database username:
+
+```text
+DB_USERNAME
+```
+
+If `DB_USERNAME` is not provided, the development configuration uses `root`.
+
+### Production
+
+Production database configuration is provided through environment variables:
+
+```text
+DB_URL
+DB_USERNAME
+DB_PASSWORD
+```
+
+Activate the production profile with:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+```
+
+Database credentials are not stored in the repository.
+
+### Test
+
+The test profile uses an in-memory H2 database.
+
+Flyway is disabled during tests and Hibernate creates and removes the test schema automatically.
+
 ## Running Locally
 
 ### Requirements
@@ -125,13 +217,7 @@ Failed attempts are calculated using the stored login history for the submitted 
 - JDK 21
 - MySQL 8
 
-The default development profile connects to:
-
-```text
-localhost:3306/login_risk_monitor
-```
-
-Set your local MySQL password as an environment variable before starting the application.
+Set the local MySQL password before starting the application.
 
 ### Windows PowerShell
 
@@ -185,7 +271,7 @@ Stop the containers:
 docker compose down
 ```
 
-To also remove the local database volume:
+To also remove the local MySQL volume:
 
 ```bash
 docker compose down -v
@@ -193,76 +279,134 @@ docker compose down -v
 
 ## Demo Accounts
 
+Local demo accounts are created through Flyway migrations.
+
 | Role | Username | Password |
 | --- | --- | --- |
 | ADMIN | `admin` | `Admin123!` |
 | USER | `user` | `User123!` |
 
-These accounts are intended for local demonstration only and should be changed or removed in a real production environment.
+These credentials are intended for local demonstration only and should be changed or removed in a real production environment.
 
-Administrators can also create new `ADMIN` or `USER` accounts through the application. New passwords are stored using BCrypt.
+Administrators can also create new `ADMIN` or `USER` accounts through the application.
+
+New passwords are stored using BCrypt.
+
+## Database Migrations
+
+Flyway migration scripts are located under:
+
+```text
+src/main/resources/db/migration
+```
+
+Current migrations:
+
+```text
+V1__create_initial_schema.sql
+V2__insert_initial_data.sql
+V3__insert_test_user.sql
+V4__insert_regular_user.sql
+V5__change_attempted_at_to_timestamp.sql
+```
+
+Flyway automatically validates and applies pending migrations when the application starts.
+
+Hibernate uses:
+
+```text
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+so the database schema is managed by Flyway rather than generated automatically in development or production.
 
 ## Testing
 
-Run all tests.
+Tests are located under:
 
-### Windows
+```text
+src/test/java
+```
+
+The project includes:
+
+- Login risk calculation tests.
+- Login-attempt normalization tests.
+- Dashboard statistics tests.
+- User service tests.
+- Role service tests.
+- Application-context test.
+
+Run all tests on Windows:
 
 ```powershell
 .\mvnw.cmd clean test
 ```
 
-### macOS / Linux
+Run all tests on macOS / Linux:
 
 ```bash
 ./mvnw clean test
 ```
 
-The test profile uses an in-memory H2 database, so MySQL is not required for the tests.
+MySQL is not required for the automated tests because the test profile uses H2.
 
-## Building and Deployment
+## Building
 
-Build the executable JAR.
-
-### Windows
+Build the executable JAR on Windows:
 
 ```powershell
 .\mvnw.cmd clean package
 ```
 
-### macOS / Linux
+On macOS / Linux:
 
 ```bash
 ./mvnw clean package
 ```
 
-The generated JAR is stored in:
+The generated JAR is stored under:
 
 ```text
 target/
 ```
 
-For production, activate the `prod` profile:
+## Deployment
+
+The application can be deployed using the included Dockerfile.
+
+The current live deployment uses:
 
 ```text
-SPRING_PROFILES_ACTIVE=prod
+GitHub
+   |
+   v
+Render
+   |
+   v
+Aiven MySQL
 ```
 
-and provide the database configuration through environment variables:
+Production configuration is supplied through environment variables rather than committed credentials.
 
-```text
-DB_URL
-DB_USERNAME
-DB_PASSWORD
-```
+Flyway runs database migrations during application startup and Hibernate validates the resulting schema.
 
-Database passwords are not stored in the repository.
+## Security
 
-Flyway runs the database migrations when the application starts, while Hibernate validates the resulting schema.
+- Authentication is implemented with Spring Security.
+- Authorization is based on `ADMIN` and `USER` roles.
+- Administrator URLs are protected server-side.
+- Regular users can access only their own statistics and login history.
+- Passwords are stored using BCrypt.
+- CSRF protection remains enabled.
+- Authentication success and failure handlers record login attempts.
+- Secrets and local `.env` files are excluded from Git.
 
 ## Known Limitations
 
 - Risk calculation uses the complete stored login history rather than a rolling time window.
+- Successful authentication does not reset the historical failed-attempt count.
 - Login-attempt lists are not currently paginated.
 - Rate limiting and account lockout are not implemented.
+- The application uses `Europe/Athens` as the display timezone.
 - When running behind a reverse proxy, additional forwarded-header configuration may be required to capture the original client IP address.
